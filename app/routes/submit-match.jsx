@@ -48,6 +48,37 @@ export default function SubmitMatch() {
     }
   }
 
+  async function insertMatchData(
+    winnerId,
+    loserId,
+    winnerRankBefore,
+    loserRankBefore,
+    winnerRankAfter,
+    loserRankAfter
+  ) {
+    try {
+      const { data, error } = await supabase.from("matches").insert([
+        {
+          winner_player_id: winnerId,
+          loser_player_id: loserId,
+          match_date: new Date(),
+          winner_rank_before: winnerRankBefore,
+          loser_rank_before: loserRankBefore,
+          winner_rank_after: winnerRankAfter,
+          loser_rank_after: loserRankAfter,
+        },
+      ]);
+
+      if (error) {
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -77,7 +108,7 @@ export default function SubmitMatch() {
         const actualOutcomeWinner = 1;
         const actualOutcomeLoser = 0;
 
-        const ratingChangeWinner = Math.floor(
+        const ratingChangeWinner = Math.ceil(
           K_FACTOR * (actualOutcomeWinner - expectedWinningProbability)
         );
         const ratingChangeLoser = Math.floor(
@@ -99,17 +130,25 @@ export default function SubmitMatch() {
         await updatePlayerRating(loserId, loserRating + ratingChangeLoser);
 
         console.log("Player ratings updated.");
+
+        await insertMatchData(
+          winnerId,
+          loserId,
+          winner.elo,
+          loser.elo,
+          winner.elo + ratingChangeWinner,
+          loser.elo + ratingChangeLoser
+        );
+
+        navigate("/");
       } else {
         console.error("Winner or loser not found in the player data.");
       }
 
-      // Store match data in the database
-      // ...
+      console.log("Match data inserted.");
 
       // Provide feedback to the user
       // alert("Match submitted successfully!");
-
-      navigate("/");
     } catch (error) {
       console.error("Error:", error);
       // alert("An error occurred while submitting the match.");

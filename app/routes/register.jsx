@@ -1,23 +1,38 @@
-// src/routes/register.tsx
-
 import { Link } from "@remix-run/react";
 import supabase from "../utils/supabase";
+import { useNavigate } from "@remix-run/react";
 
 export default function Register() {
-  const handleSubmit = async (e) => {
-    console.log("Form submitted");
+  const navigate = useNavigate();
 
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
 
     try {
-      // Insert player data into the database
+      const profilePhoto = formData.get("profilePhoto");
+      const { data: fileData, error: fileError } = await supabase.storage
+        .from("player-profile-photos")
+        .upload(`${profilePhoto.name}`, profilePhoto);
+
+      if (fileError) {
+        console.error("Error uploading profile photo:", fileError);
+        return;
+      }
+
+      // The URL of the uploaded file
+      console.log("Successfully uploaded photo");
+      console.log({ fileData });
+      const profilePhotoUrl = fileData.path;
+
       const { data: playerData, error: playerError } = await supabase
         .from("players")
         .insert([
           {
             first_name: formData.get("firstName"),
             last_name: formData.get("lastName"),
+            profile_photo_url: profilePhotoUrl, // Store the URL in your database
+            program: formData.get("program"),
           },
         ]);
 
@@ -26,10 +41,9 @@ export default function Register() {
         return;
       }
 
-      // Player registration successful
       console.log("Player registered successfully:", playerData);
 
-      // Redirect to the leaderboard or a confirmation page
+      navigate("/");
     } catch (error) {
       console.error("Error:", error);
     }
@@ -48,6 +62,17 @@ export default function Register() {
         <label>
           Last Name:
           <input type="text" name="lastName" />
+        </label>
+        <label>
+          Program:
+          <select name="program">
+            <option value="SYDE">SYDE</option>
+            <option value="BME">BME</option>
+          </select>
+        </label>
+        <label>
+          Profile Photo:
+          <input type="file" name="profilePhoto" accept="image/*" />
         </label>
         <button type="submit">Register</button>
       </form>

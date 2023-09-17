@@ -1,4 +1,4 @@
-import { cssBundleHref } from "@remix-run/css-bundle";
+import stylesheet from "~/tailwind.css";
 
 import {
   Links,
@@ -9,9 +9,7 @@ import {
   ScrollRestoration,
 } from "@remix-run/react";
 
-export const links = () => [
-  ...(cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }] : []),
-];
+export const links = () => [{ rel: "stylesheet", href: stylesheet }];
 
 export default function App() {
   return (
@@ -22,8 +20,13 @@ export default function App() {
         <Meta />
         <Links />
       </head>
-      <body>
-        <Outlet />
+      <body className="flex flex-col items-center bg-purple-100">
+        <div
+          className="w-full bg-purple-200 px-4 py-8 min-h-screen relative"
+          style={{ maxWidth: "400px" }}
+        >
+          <Outlet />
+        </div>
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
